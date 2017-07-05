@@ -13,7 +13,8 @@ try:
 
     from configuration import (WINDOW_SIZE, HEAD_IMG, IMAGE_FOLDER,
                                TAIL_IMG, BODY_STRAIGHT_IMG, MAP_SIZE,
-                               CASE_SIZE, TURN_IMG, GAME_OVER, FRUITS_IMG)
+                               CASE_SIZE, TURN_IMG, GAME_OVER, FRUITS_IMG,
+                               KEYS)
     import pygame
     from pygame.locals import *
 except ImportError as err:
@@ -58,11 +59,16 @@ class Snake():
                        "tail": load_png(TAIL_IMG),
                        "body_turn": load_png(TURN_IMG)}
         self.initial_size = initial_size
-        self.coordonnees = [[int(MAP_SIZE[0] / 2), int(MAP_SIZE[1] / 2)]
+        self.coords = [[int(MAP_SIZE[0] / 2), int(MAP_SIZE[1] / 2)]
                             for i in range(initial_size)]
         self.surface = pygame.surface.Surface(WINDOW_SIZE)
         self.surface.set_colorkey((0, 0, 0))
         self.directions = [0 for i in range(initial_size)]
+
+    def rotate(self, image, angle):
+            return pygame.transform.rotate(
+                    self.images[image],
+                    angle)
 
     def update(self):
         """Update the surface of the snake"""
@@ -70,53 +76,43 @@ class Snake():
         # head
         self.surface.blit(pygame.transform.rotate(self.images["head"],
                                                   -90 * self.directions[0]),
-                          (CASE_SIZE[0] * self.coordonnees[0][0],
-                           CASE_SIZE[1] * self.coordonnees[0][1]))
+                          (CASE_SIZE[0] * self.coords[0][0],
+                           CASE_SIZE[1] * self.coords[0][1]))
         # body
         size_x, size_y = CASE_SIZE
 
-        for i in range(len(self.coordonnees[1:-1])):
-            x, y = self.coordonnees[i + 1]
+        for i in range(len(self.coords[1:-1])):
+            x, y = self.coords[i + 1]
             direction = self.directions[i + 1]
             direction_prec = self.directions[i]
             if direction == direction_prec:  # straight
-                self.surface.blit(pygame.transform.rotate(
-                    self.images["body_straight"],
-                    -90 * direction),
+                self.surface.blit(self.rotate("body_straight", -90*direction),
                                   (size_x * x, size_y * y))
             # turn right>top or botom>left
             if (direction == 0 and direction_prec == 1) or \
                (direction == 3 and direction_prec == 2):
-                self.surface.blit(pygame.transform.rotate(
-                    self.images["body_turn"],
-                    0),
+                self.surface.blit(self.rotate("body_turn",0),
                                   (size_x * x, size_y * y))
             # turn left>top or botom>right
             if (direction == 0 and direction_prec == 3) or \
                (direction == 1 and direction_prec == 2):
-                self.surface.blit(pygame.transform.rotate(
-                    self.images["body_turn"],
-                    -90),
+                self.surface.blit(self.rotate("body_turn",-90),
                                   (size_x * x, size_y * y))
             # turn left>botom or top>right
             if (direction == 2 and direction_prec == 3) or \
                (direction == 1 and direction_prec == 0):
-                self.surface.blit(pygame.transform.rotate(
-                    self.images["body_turn"],
-                    180),
-                                  (size_x * x, size_y * y))
+                self.surface.blit(self.rotate("body_turn",180),
+                                 (size_x * x, size_y * y))
             # turn top>left or right>botom
             if (direction == 3 and direction_prec == 0) or \
                (direction == 2 and direction_prec == 1):
-                self.surface.blit(pygame.transform.rotate(
-                    self.images["body_turn"],
-                    90),
+                self.surface.blit(self.rotate("body_turn",90),
                                   (size_x * x, size_y * y))
         # Tail
         self.surface.blit(pygame.transform.rotate(self.images["tail"],
                                                   -90 * self.directions[-2]),
-                          (size_x * self.coordonnees[-1][0],
-                           size_y * self.coordonnees[-1][1]))
+                          (size_x * self.coords[-1][0],
+                           size_y * self.coords[-1][1]))
 
     def deplacer(self, direction=0):
         """Move the snake
@@ -136,41 +132,41 @@ class Snake():
         # insert new direction
         self.directions.insert(0, direction)
         self.directions = self.directions[:-1]
-        # insert new coordonnees
+        # insert new coords
         if direction == 0:
-            nouvelle_coordonnee = (self.coordonnees[0][0],
-                                   self.coordonnees[0][1] - 1)
-            self.coordonnees.insert(0, nouvelle_coordonnee)
-            self.coordonnees = self.coordonnees[:-1]
+            new_coords = (self.coords[0][0],
+                                   self.coords[0][1] - 1)
+            self.coords.insert(0, new_coords)
+            self.coords = self.coords[:-1]
         elif direction == 1:
-            nouvelle_coordonnee = (self.coordonnees[0][0] + 1,
-                                   self.coordonnees[0][1])
-            self.coordonnees.insert(0, nouvelle_coordonnee)
-            self.coordonnees = self.coordonnees[:-1]
+            new_coords = (self.coords[0][0] + 1,
+                                   self.coords[0][1])
+            self.coords.insert(0, new_coords)
+            self.coords = self.coords[:-1]
         elif direction == 2:
-            nouvelle_coordonnee = (self.coordonnees[0][0],
-                                   self.coordonnees[0][1] + 1)
-            self.coordonnees.insert(0, nouvelle_coordonnee)
-            self.coordonnees = self.coordonnees[:-1]
+            new_coords = (self.coords[0][0],
+                                   self.coords[0][1] + 1)
+            self.coords.insert(0, new_coords)
+            self.coords = self.coords[:-1]
         elif direction == 3:
-            nouvelle_coordonnee = (self.coordonnees[0][0] - 1,
-                                   self.coordonnees[0][1])
-            self.coordonnees.insert(0, nouvelle_coordonnee)
-            self.coordonnees = self.coordonnees[:-1]
+            new_coords = (self.coords[0][0] - 1,
+                                   self.coords[0][1])
+            self.coords.insert(0, new_coords)
+            self.coords = self.coords[:-1]
 
     def grow(self):
         """Grow the snake"""
         self.directions.append(self.directions[-1])
-        self.coordonnees.append(self.coordonnees[-1])
+        self.coords.append(self.coords[-1])
 
     def collision(self):
-        for coord in self.coordonnees[1:]:
-            if coord == self.coordonnees[0]:
+        for coord in self.coords[1:]:
+            if coord == self.coords[0]:
                 return True
-        if self.coordonnees[0][0] < 0 or \
-           self.coordonnees[0][1] < 0 or \
-           self.coordonnees[0][0] > MAP_SIZE[0] or \
-           self.coordonnees[0][1] > MAP_SIZE[1]:
+        if self.coords[0][0] < 0 or \
+           self.coords[0][1] < 0 or \
+           self.coords[0][0] > MAP_SIZE[0] or \
+           self.coords[0][1] > MAP_SIZE[1]:
             return True
         return False
 
@@ -246,22 +242,14 @@ class Game():
                     return
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
-                        return
-                    if event.key == K_UP:
-                        self.snake.deplacer(0)
-                        move = True
-                    elif event.key == K_RIGHT:
-                        self.snake.deplacer(1)
-                        move = True
-                    elif event.key == K_DOWN:
-                        self.snake.deplacer(2)
-                        move = True
-                    elif event.key == K_LEFT:
-                        self.snake.deplacer(3)
+                        while pygame.event.wait().__dict__.get('key') is not K_ESCAPE:
+                            continue
+                    if event.key in KEYS:
+                        self.snake.deplacer(KEYS.index(event.key))
                         move = True
             if not move:
                 self.snake.deplacer(-1)
-            if self.fruits.collision(*self.snake.coordonnees[0]):
+            if self.fruits.collision(*self.snake.coords[0]):
                 self.points += 10
                 self.snake.grow()
                 self.fruits.add_fruit()
@@ -282,5 +270,5 @@ class Game():
             clock.tick(self.speed)
 
 if __name__ == '__main__':
-    game = Game(difficult = 5)
+    game = Game(difficult = 30)
     game.run()
