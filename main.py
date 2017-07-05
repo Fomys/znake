@@ -191,8 +191,8 @@ class Fruits():
         condition = True
         ligne, case = (0, 0)
         while (ligne, case) in self.fruits_coords or condition:
-            ligne = random.randint(0, MAP_SIZE[0])
-            case = random.randint(0, MAP_SIZE[1])
+            ligne = random.randint(0, MAP_SIZE[0]-1)
+            case = random.randint(0, MAP_SIZE[1]-1)
             condition = False
         self.fruits_coords.append((ligne, case))
         self.fruits_image.append(random.choice(self.images))
@@ -218,12 +218,14 @@ class Fruits():
 class Game():
     """ Main class for the game """
 
-    def __init__(self):
+    def __init__(self, difficult):
         """initialisation of the game"""
         self.snake = Snake(initial_size=6)
         self.fruits = Fruits()
         self.points = 0
         self.font = pygame.font.SysFont("monospace", 24)
+        self.speed = 1
+        self.difficult = difficult
 
     def run(self):
         """run the game"""
@@ -263,6 +265,7 @@ class Game():
                 self.points += 10
                 self.snake.grow()
                 self.fruits.add_fruit()
+                self.speed += 0.1*self.difficult
             self.points += 1
             move = False
             self.snake.update()
@@ -276,8 +279,8 @@ class Game():
                 pygame.display.flip()
                 return
             pygame.display.flip()
-            clock.tick(3)
+            clock.tick(self.speed)
 
 if __name__ == '__main__':
-    game = Game()
+    game = Game(difficult = 5)
     game.run()
