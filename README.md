@@ -1,2 +1,2 @@
 # znake
-a snake with python and pygame
+A snake game with python and pygame
